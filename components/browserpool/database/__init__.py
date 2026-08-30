@@ -1,3 +1,3 @@
-from browserpool.database import core
+from .core import DAOFactory, DatabaseProvider
 
-__all__ = ["core"]
+__all__ = ["DAOFactory", "DatabaseProvider"]
