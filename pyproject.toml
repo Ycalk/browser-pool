@@ -1,0 +1,53 @@
+[tool.poetry]
+name = "browser-pool"
+version = "0.1.0"
+description = ""
+authors = ["ycalk (Лосев Алексей) <alosev752@gmail.com>"]
+packages = [
+    { include = "browserpool/migrator", from = "bases" },
+    { include = "browserpool/logging", from = "components" },
+    {include = "browserpool/database",from = "components"},
+]
+[tool.poetry.dependencies]
+python = ">=3.13,<3.15"
+fastapi = {extras = ["standart"], version = "^0.141.1"}
+dishka = {extras = ["fastapi"], version = "^1.10.1"}
+pydantic-settings = "^2.15.0"
+sqlalchemy = {extras = ["asyncio"], version = "^2.0.52"}
+alembic = "^1.19.1"
+asyncpg = "^0.31.0"
+structlog = "^26.1.0"
+opentelemetry-api = "^1.44.0"
+opentelemetry-sdk = "^1.44.0"
+opentelemetry-exporter-otlp = "^1.44.0"
+opentelemetry-instrumentation-sqlalchemy = "^0.65b0"
+opentelemetry-instrumentation-fastapi = "^0.65b0"
+opentelemetry-instrumentation-asyncpg = "^0.65b0"
+pytest = "^9.1.1"
+pytest-asyncio = "^1.4.0"
+
+[tool.basedpyright]
+typeCheckingMode = "recommended"
+extraPaths = ["components", "bases"]
+reportUntypedFunctionDecorator = false
+reportMissingTypeStubs = false
+reportUnknownParameterType = false
+reportUnknownArgumentType = false
+reportUnknownLambdaType = false
+reportUnknownMemberType = false
+reportExplicitAny = false
+reportImportCycles = false
+reportCallInDefaultInitializer = false
+reportIgnoreCommentWithoutRule = false
+reportUnknownVariableType = false
+reportUnusedCallResult = false
+reportAny = false
+enableTypeIgnoreComments = true
+reportUnnecessaryTypeIgnoreComment = false
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
