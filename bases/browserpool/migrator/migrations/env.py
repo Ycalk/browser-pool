@@ -3,10 +3,10 @@ from logging.config import fileConfig
 
 from alembic import context
 from browserpool.database import DatabaseProvider
-from browserpool.database.core import DatabaseUrl
 from browserpool.database.models._base import BaseModel
 from browserpool.logging import LoggingSettings, LoggingSettingsProvider, setup_logging
 from dishka import make_async_container, make_container
+from sqlalchemy import URL
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import AsyncEngine
 
@@ -34,7 +34,7 @@ def run_migrations_offline() -> None:
     container = make_container(DatabaseProvider(), LoggingSettingsProvider())
     setup_logging(container.get(LoggingSettings), "migrator")
 
-    url = container.get(DatabaseUrl)
+    url = container.get(URL)
     context.configure(
         url=url,
         target_metadata=BaseModel.metadata,

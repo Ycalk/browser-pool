@@ -1,12 +1,12 @@
 from collections.abc import AsyncGenerator, AsyncIterable, Callable
 from contextlib import asynccontextmanager
-from typing import NewType
 
 import structlog
 from dishka import Provider, Scope, provide
 from dishka.dependency_source import CompositeDependencySource
 from opentelemetry import trace
 from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
+from sqlalchemy import URL
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
@@ -15,8 +15,6 @@ from sqlalchemy.ext.asyncio import (
 )
 
 from .settings import DatabaseSettings
-
-DatabaseUrl = NewType("DatabaseUrl", str)
 
 
 class _DAOScope:
@@ -53,20 +51,20 @@ class DatabaseProvider(Provider):
     def database_url(
         self,
         database_settings: DatabaseSettings,
-    ) -> DatabaseUrl:
-        url = (
-            f"postgresql+asyncpg://{database_settings.postgres_user}"
-            + f":{database_settings.postgres_password}"
-            + f"@{database_settings.postgres_host}"
-            + f":{database_settings.postgres_port}"
-            + f"/{database_settings.postgres_db}"
+    ) -> URL:
+        return URL.create(
+            "postgresql+psycopg",
+            username=database_settings.postgres_user,
+            password=database_settings.postgres_password,
+            host=database_settings.postgres_host,
+            port=database_settings.postgres_port,
+            database=database_settings.postgres_db,
         )
-        return DatabaseUrl(url)
 
     @provide(scope=Scope.APP)
     async def engine(
         self,
-        database_url: DatabaseUrl,
+        database_url: URL,
         database_settings: DatabaseSettings,
     ) -> AsyncIterable[AsyncEngine]:
         logger = structlog.get_logger("database")
@@ -77,9 +75,8 @@ class DatabaseProvider(Provider):
             max_overflow=database_settings.postgres_max_overflow,
             pool_pre_ping=True,
             connect_args={
-                "server_settings": {
-                    "timezone": "UTC",
-                }
+                "application_name": "browserpool",
+                "options": "-c timezone=UTC",
             },
             isolation_level="READ COMMITTED",
         )
