@@ -21,7 +21,7 @@ _logger: Final[structlog.BoundLogger] = structlog.get_logger(__name__)
 
 
 class CreateContainerResponse(BaseModel):
-    id: Annotated[str, Field(validation_alias="Id")]
+    container_id: Annotated[str, Field(validation_alias="Id")]
     warnings: Annotated[list[str], Field(validation_alias="Warnings")] = []
 
 
@@ -42,22 +42,23 @@ class CreateContainerCommand(Command[ContainerConfig, CreateContainerResponse]):
             }
             if parameters.platform is not None:
                 query_params["platform"] = parameters.platform
-            json_data = parameters.model_dump_json(by_alias=True)
             _logger.info(
                 "calling_docker",
                 method="POST",
                 path=path,
                 query_params=json.dumps(query_params),
-                json=json_data,
+                json=parameters.model_dump_json(by_alias=True),
             )
             response = await self._client.post(
-                path, params=query_params, json=json_data
+                path,
+                params=query_params,
+                json=parameters.model_dump(by_alias=True),
             )
             if response.status_code == 201:
                 response_data = CreateContainerResponse.model_validate_json(
                     response.content
                 )
-                span.set_attribute("response.container.id", response_data.id)
+                span.set_attribute("response.container.id", response_data.container_id)
                 span.set_attribute("response.warnings", response_data.warnings)
                 _logger.info("successful_response", data=response_data)
                 if len(response_data.warnings) > 0:

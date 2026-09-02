@@ -258,7 +258,7 @@ class HostConfig(BaseModel):
                     f"{container_binds}/tcp"
                     if isinstance(container_binds, int)
                     else f"{container_binds[0]}/{container_binds[1]}": [
-                        {"HostIp": ip, "HostPort": port} for ip, port in host_binds
+                        {"HostIp": ip, "HostPort": str(port)} for ip, port in host_binds
                     ]
                     for container_binds, host_binds in value.items()
                 }
@@ -289,7 +289,7 @@ class HostConfig(BaseModel):
                 if value is not None
                 else None
             ),
-            return_type=dict[str, int] | None,
+            return_type=dict[str, str | int] | None,
         ),
     ]
     security_opt: Annotated[

@@ -55,3 +55,6 @@ select = ["E", "F", "I", "UP"]
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+start_container = "development.start_container:run"

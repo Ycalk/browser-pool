@@ -15,7 +15,7 @@ from .commands import (
 from .settings import ContainerDriverSettings
 
 
-class DatabaseProvider(Provider):
+class ContainerDriverProvider(Provider):
     commands: CompositeDependencySource = provide_all(
         CreateContainerCommand,
         RemoveContainerCommand,
@@ -35,7 +35,8 @@ class DatabaseProvider(Provider):
     ) -> AsyncIterator[DockerClient]:
         async with AsyncClient(
             transport=AsyncHTTPTransport(uds=settings.docker_host),
-            base_url="http://docker",
+            base_url=f"http://docker/{settings.docker_api_version}",
+            timeout=settings.docker_timeout_seconds,
         ) as client:
             HTTPXClientInstrumentor.instrument_client(client)
             yield DockerClient(client)

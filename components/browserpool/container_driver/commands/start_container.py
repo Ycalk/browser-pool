@@ -18,7 +18,7 @@ _logger: Final[structlog.BoundLogger] = structlog.get_logger(__name__)
 
 
 class StartContainerParameters(BaseModel):
-    id: str
+    container_id: str
     detach_keys: str | None = None
 
 
@@ -29,8 +29,8 @@ class StartContainerCommand(Command[StartContainerParameters, None]):
     @override
     async def __call__(self, parameters: StartContainerParameters) -> None:
         with _tracer.start_as_current_span("container_driver.start_container") as span:
-            path = f"/containers/{parameters.id}/start"
-            span.set_attribute("request.container.id", parameters.id)
+            path = f"/containers/{parameters.container_id}/start"
+            span.set_attribute("request.container.id", parameters.container_id)
             span.set_attribute("request.detach_keys", parameters.detach_keys or "none")
             span.set_attribute("request.docker.path", path)
             _logger.info("parameters", parameters=parameters.model_dump_json())

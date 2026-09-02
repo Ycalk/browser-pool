@@ -12,7 +12,7 @@ from .commands import (
     StopContainerCommand,
     StopContainerParameters,
 )
-from .core import DatabaseProvider
+from .core import ContainerDriverProvider
 from .dto import (
     BindOptions,
     ContainerConfig,
@@ -33,7 +33,7 @@ from .dto import (
 )
 
 __all__ = [
-    "DatabaseProvider",
+    "ContainerDriverProvider",
     "CreateContainerCommand",
     "CreateContainerResponse",
     "RemoveContainerCommand",

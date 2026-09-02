@@ -13,3 +13,5 @@ class ContainerDriverSettings(BaseSettings):
     )
 
     docker_host: str = "/var/run/docker.sock"
+    docker_api_version: str = "v1.55"
+    docker_timeout_seconds: int = 30
