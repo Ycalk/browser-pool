@@ -4,11 +4,12 @@ version = "0.1.0"
 description = ""
 authors = ["ycalk (Лосев Алексей) <alosev752@gmail.com>"]
 packages = [
-    { include = "browserpool/migrator", from = "bases" },
-    { include = "browserpool/logging", from = "components" },
+    {include = "browserpool/migrator",from = "bases"},
+    {include = "browserpool/logging",from = "components"},
     {include = "browserpool/database",from = "components"},
     {include = "browserpool/container_driver",from = "components"},
     {include = "browserpool/domain_core",from = "components"},
+    {include = "browserpool/camoufox_server",from = "bases"},
 ]
 [tool.poetry.dependencies]
 python = ">=3.13,<3.15"
@@ -29,6 +30,7 @@ opentelemetry-instrumentation-httpx = "^0.65b0"
 pytest = "^9.1.1"
 pytest-asyncio = "^1.4.0"
 httpx = "^0.28.1"
+camoufox = {extras = ["geoip"], version = "^0.5.6"}
 
 [tool.basedpyright]
 typeCheckingMode = "recommended"
