@@ -45,23 +45,6 @@ class NetworkConfig(BaseModel):
     labels: Annotated[dict[str, str] | None, Field(serialization_alias="Labels")] = None
 
 
-class NetworkFilters(BaseModel):
-    """Docker filter document for `GET /networks` and `POST /networks/prune`."""
-
-    labels: Annotated[
-        dict[str, str] | None,
-        Field(serialization_alias="label"),
-        PlainSerializer(
-            lambda value: (
-                [f"{key}={item}" for key, item in value.items()]
-                if value is not None
-                else None
-            ),
-            return_type=list[str] | None,
-        ),
-    ] = None
-
-
 class NetworkSubnet(BaseModel):
     subnet: str = Field(validation_alias="Subnet")
     gateway: str | None = Field(validation_alias="Gateway", default=None)

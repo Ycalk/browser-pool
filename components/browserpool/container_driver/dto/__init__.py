@@ -1,6 +1,11 @@
 from .container import (
     BindOptions,
     ContainerConfig,
+    ContainerDetailResponse,
+    ContainerNetwork,
+    ContainerPort,
+    ContainerStateResponse,
+    ContainerSummaryResponse,
     DeviceRequest,
     DriverConfig,
     EndpointConfig,
@@ -16,9 +21,9 @@ from .container import (
     Ulimit,
     VolumeOptions,
 )
+from .filters import LabelFilters
 from .network import (
     NetworkConfig,
-    NetworkFilters,
     NetworkIPAM,
     NetworkIPAMConfig,
     NetworkIPAMState,
@@ -46,12 +51,17 @@ __all__ = [
     "EndpointConfig",
     "IPAMConfig",
     "Healthcheck",
+    "LabelFilters",
     "NetworkConfig",
-    "NetworkFilters",
     "NetworkIPAM",
     "NetworkIPAMConfig",
     "NetworkIPAMState",
     "NetworkOptions",
     "NetworkResponse",
     "NetworkSubnet",
+    "ContainerDetailResponse",
+    "ContainerNetwork",
+    "ContainerPort",
+    "ContainerStateResponse",
+    "ContainerSummaryResponse",
 ]

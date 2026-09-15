@@ -3,7 +3,14 @@ from __future__ import annotations
 import shlex
 from typing import Annotated, Any, Literal
 
-from pydantic import BaseModel, Field, PlainSerializer, computed_field
+from pydantic import (
+    AliasPath,
+    BaseModel,
+    BeforeValidator,
+    Field,
+    PlainSerializer,
+    computed_field,
+)
 
 
 class ContainerConfig(BaseModel):
@@ -543,3 +550,113 @@ class Healthcheck(BaseModel):
     timeout: Annotated[int, Field(serialization_alias="Timeout")]
     retries: Annotated[int, Field(serialization_alias="Retries")]
     start_period: Annotated[int, Field(serialization_alias="StartPeriod")]
+
+
+# Docker reports "not yet" as the zero time instead of omitting the field.
+_ZERO_TIME: str = "0001-01-01T00:00:00Z"
+
+
+def _none_if_zero_time(value: str | None) -> str | None:
+    return None if value == _ZERO_TIME else value
+
+
+def _name(names: list[str]) -> str:
+    if not names:
+        raise ValueError("container has no names")
+    return names[0].removeprefix("/")
+
+
+def _strip_slash(value: str) -> str:
+    return value.removeprefix("/")
+
+
+def _list_or_empty(value: list[Any] | None) -> list[Any]:
+    return value if value is not None else []
+
+
+def _dict_or_empty(value: dict[str, Any] | None) -> dict[str, Any]:
+    return value if value is not None else {}
+
+
+def _environment(value: list[str]) -> dict[str, str]:
+    return {
+        key: item for key, _, item in (entry.partition("=") for entry in value) if key
+    }
+
+
+class ContainerNetwork(BaseModel):
+    network_id: str = Field(validation_alias="NetworkID", default="")
+    ip_address: str = Field(validation_alias="IPAddress", default="")
+    gateway: str = Field(validation_alias="Gateway", default="")
+
+
+class ContainerPort(BaseModel):
+    ip: str | None = Field(validation_alias="IP", default=None)
+    private_port: int = Field(validation_alias="PrivatePort")
+    public_port: int | None = Field(validation_alias="PublicPort", default=None)
+    type: str = Field(validation_alias="Type", default="")
+
+
+class ContainerStateResponse(BaseModel):
+    status: str = Field(validation_alias="Status")
+    running: bool = Field(validation_alias="Running")
+    exit_code: int = Field(validation_alias="ExitCode", default=0)
+    started_at: Annotated[
+        str | None,
+        BeforeValidator(_none_if_zero_time),
+        Field(validation_alias="StartedAt"),
+    ] = None
+    finished_at: Annotated[
+        str | None,
+        BeforeValidator(_none_if_zero_time),
+        Field(validation_alias="FinishedAt"),
+    ] = None
+
+
+class ContainerSummaryResponse(BaseModel):
+    """Entry of `GET /containers/json`; names/networks of every network are returned."""
+
+    id: str = Field(validation_alias="Id")
+    name: Annotated[str, BeforeValidator(_name), Field(validation_alias="Names")]
+    image: str = Field(validation_alias="Image")
+    created: int = Field(validation_alias="Created")
+    state: str = Field(validation_alias="State")
+    status: str = Field(validation_alias="Status")
+    labels: dict[str, str] | None = Field(validation_alias="Labels", default=None)
+    ports: Annotated[
+        list[ContainerPort],
+        BeforeValidator(_list_or_empty),
+        Field(validation_alias="Ports"),
+    ] = []
+    networks: Annotated[
+        dict[str, ContainerNetwork],
+        BeforeValidator(_dict_or_empty),
+        Field(validation_alias=AliasPath("NetworkSettings", "Networks")),
+    ] = {}
+
+
+class ContainerDetailResponse(BaseModel):
+    """`GET /containers/{id}/json`: lifecycle state, config and attached networks."""
+
+    id: str = Field(validation_alias="Id")
+    name: Annotated[
+        str, BeforeValidator(_strip_slash), Field(validation_alias="Name")
+    ]
+    image: str = Field(validation_alias="Image")
+    created: str = Field(validation_alias="Created")
+    state: ContainerStateResponse = Field(validation_alias="State")
+    environment: Annotated[
+        dict[str, str],
+        BeforeValidator(_environment),
+        Field(validation_alias=AliasPath("Config", "Env")),
+    ] = {}
+    labels: Annotated[
+        dict[str, str],
+        BeforeValidator(_dict_or_empty),
+        Field(validation_alias=AliasPath("Config", "Labels")),
+    ] = {}
+    networks: Annotated[
+        dict[str, ContainerNetwork],
+        BeforeValidator(_dict_or_empty),
+        Field(validation_alias=AliasPath("NetworkSettings", "Networks")),
+    ] = {}

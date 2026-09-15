@@ -9,6 +9,8 @@ from .client import DockerClient
 from .commands import (
     CreateContainerCommand,
     CreateNetworkCommand,
+    InspectContainerCommand,
+    ListContainersCommand,
     ListNetworksCommand,
     PruneNetworksCommand,
     RemoveContainerCommand,
@@ -24,6 +26,8 @@ class ContainerDriverProvider(Provider):
     commands: CompositeDependencySource = provide_all(
         CreateContainerCommand,
         CreateNetworkCommand,
+        InspectContainerCommand,
+        ListContainersCommand,
         ListNetworksCommand,
         PruneNetworksCommand,
         RemoveContainerCommand,

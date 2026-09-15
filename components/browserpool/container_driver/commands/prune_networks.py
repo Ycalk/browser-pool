@@ -3,7 +3,7 @@ from typing import Annotated, Final, override
 
 import structlog
 from browserpool.container_driver.client import DockerClient
-from browserpool.container_driver.dto import NetworkFilters
+from browserpool.container_driver.dto import LabelFilters
 from browserpool.domain_core import Command
 from httpx import HTTPStatusError
 from opentelemetry import trace
@@ -24,12 +24,12 @@ class PruneNetworksResponse(BaseModel):
     ] = []
 
 
-class PruneNetworksCommand(Command[NetworkFilters, PruneNetworksResponse]):
+class PruneNetworksCommand(Command[LabelFilters, PruneNetworksResponse]):
     def __init__(self, client: DockerClient) -> None:
         self._client: DockerClient = client
 
     @override
-    async def __call__(self, parameters: NetworkFilters) -> PruneNetworksResponse:
+    async def __call__(self, parameters: LabelFilters) -> PruneNetworksResponse:
         with _tracer.start_as_current_span("container_driver.prune_networks") as span:
             path = "/networks/prune"
             span.set_attribute("request.docker.path", path)

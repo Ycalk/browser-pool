@@ -7,6 +7,8 @@ from .exceptions import (
     DockerForbiddenException,
     DockerNotFoundException,
 )
+from .inspect_container import InspectContainerCommand, InspectContainerParameters
+from .list_containers import ListContainersCommand, ListContainersParameters
 from .list_networks import ListNetworksCommand
 from .prune_networks import PruneNetworksCommand, PruneNetworksResponse
 from .remove_container import RemoveContainerCommand, RemoveContainerParameters
@@ -19,6 +21,10 @@ __all__ = [
     "CreateContainerResponse",
     "CreateNetworkCommand",
     "CreateNetworkResponse",
+    "InspectContainerCommand",
+    "InspectContainerParameters",
+    "ListContainersCommand",
+    "ListContainersParameters",
     "ListNetworksCommand",
     "PruneNetworksCommand",
     "PruneNetworksResponse",

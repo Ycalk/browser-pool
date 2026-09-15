@@ -7,9 +7,9 @@ import pytest
 from browserpool.container_driver import (
     CreateNetworkCommand,
     DockerForbiddenException,
+    LabelFilters,
     ListNetworksCommand,
     NetworkConfig,
-    NetworkFilters,
     NetworkIPAM,
     NetworkIPAMConfig,
     NetworkOptions,
@@ -77,7 +77,7 @@ async def test_list_sends_labels_as_docker_filter_document():
         return httpx.Response(200, json=[_NETWORK])
 
     command = ListNetworksCommand(_client(handler))
-    networks = await command(NetworkFilters(labels={"browserpool.managed": "true"}))
+    networks = await command(LabelFilters(labels={"browserpool.managed": "true"}))
 
     assert seen["path"] == "/v1.55/networks"
     assert json.loads(seen["filters"]) == {"label": ["browserpool.managed=true"]}
@@ -96,7 +96,7 @@ async def test_prune_returns_deleted_names():
         return httpx.Response(200, json={"NetworksDeleted": ["browserpool-1"]})
 
     command = PruneNetworksCommand(_client(handler))
-    response = await command(NetworkFilters(labels={"browserpool.managed": "true"}))
+    response = await command(LabelFilters(labels={"browserpool.managed": "true"}))
 
     assert seen["path"] == "/v1.55/networks/prune"
     assert json.loads(seen["filters"]) == {"label": ["browserpool.managed=true"]}
@@ -109,7 +109,7 @@ async def test_prune_accepts_null_when_nothing_was_deleted():
         return httpx.Response(200, json={"NetworksDeleted": None})
 
     command = PruneNetworksCommand(_client(handler))
-    response = await command(NetworkFilters(labels={"browserpool.managed": "true"}))
+    response = await command(LabelFilters(labels={"browserpool.managed": "true"}))
 
     assert response.networks_deleted == []
 

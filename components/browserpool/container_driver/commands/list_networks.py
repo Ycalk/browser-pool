@@ -3,7 +3,7 @@ from typing import Final, override
 
 import structlog
 from browserpool.container_driver.client import DockerClient
-from browserpool.container_driver.dto import NetworkFilters, NetworkResponse
+from browserpool.container_driver.dto import LabelFilters, NetworkResponse
 from browserpool.domain_core import Command
 from httpx import HTTPStatusError
 from opentelemetry import trace
@@ -18,12 +18,12 @@ _adapter: Final[TypeAdapter[list[NetworkResponse]]] = TypeAdapter(
 )
 
 
-class ListNetworksCommand(Command[NetworkFilters, list[NetworkResponse]]):
+class ListNetworksCommand(Command[LabelFilters, list[NetworkResponse]]):
     def __init__(self, client: DockerClient) -> None:
         self._client: DockerClient = client
 
     @override
-    async def __call__(self, parameters: NetworkFilters) -> list[NetworkResponse]:
+    async def __call__(self, parameters: LabelFilters) -> list[NetworkResponse]:
         with _tracer.start_as_current_span("container_driver.list_networks") as span:
             path = "/networks"
             span.set_attribute("request.docker.path", path)
