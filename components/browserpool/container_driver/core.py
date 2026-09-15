@@ -13,6 +13,7 @@ from .commands import (
     StopContainerCommand,
 )
 from .settings import ContainerDriverSettings
+from .version import ensure_api_version
 
 
 class ContainerDriverProvider(Provider):
@@ -39,4 +40,6 @@ class ContainerDriverProvider(Provider):
             timeout=settings.docker_timeout_seconds,
         ) as client:
             HTTPXClientInstrumentor.instrument_client(client)
-            yield DockerClient(client)
+            docker_client = DockerClient(client)
+            await ensure_api_version(docker_client, settings)
+            yield docker_client

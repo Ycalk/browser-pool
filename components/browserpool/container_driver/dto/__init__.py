@@ -16,9 +16,11 @@ from .container import (
     Ulimit,
     VolumeOptions,
 )
+from .version import DockerVersionResponse
 
 __all__ = [
     "ContainerConfig",
+    "DockerVersionResponse",
     "HostConfig",
     "HostBind",
     "HostDevice",

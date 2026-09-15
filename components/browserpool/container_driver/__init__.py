@@ -17,6 +17,7 @@ from .dto import (
     BindOptions,
     ContainerConfig,
     DeviceRequest,
+    DockerVersionResponse,
     DriverConfig,
     EndpointConfig,
     Healthcheck,
@@ -34,6 +35,7 @@ from .dto import (
 
 __all__ = [
     "ContainerDriverProvider",
+    "DockerVersionResponse",
     "CreateContainerCommand",
     "CreateContainerResponse",
     "RemoveContainerCommand",
