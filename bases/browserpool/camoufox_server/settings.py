@@ -22,4 +22,5 @@ class CamoufoxServerSettings(BaseSettings):
     camoufox_os: Literal["macos", "windows", "linux"] = "linux"
     screen_width: int = 1920
     screen_height: int = 1080
+    panel_height: int = 27
     camoufox_proxy: str | None = None

@@ -2,7 +2,7 @@ FROM python:3.13-slim-bookworm
 
 RUN export DEBIAN_FRONTEND=noninteractive && \
     apt-get update && apt-get install -y --no-install-recommends \
-    curl ca-certificates matchbox-window-manager socat xz-utils tzdata x11-utils \
+    curl ca-certificates matchbox-window-manager xz-utils tzdata x11-utils \
     libgtk-3-0 libavformat-dev libasound2 libswscale-dev libdbus-glib-1-2 \
     && rm -rf /var/lib/apt/lists/*
 

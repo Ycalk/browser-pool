@@ -1,6 +1,5 @@
 from urllib.parse import urlsplit
 
-from browserforge.fingerprints import Screen
 from camoufox.server import launch_server
 from dishka import Provider, Scope, make_container, provide
 
@@ -11,6 +10,20 @@ class CamoufoxServerProvider(Provider):
     @provide(scope=Scope.APP)
     def settings(self) -> CamoufoxServerSettings:
         return CamoufoxServerSettings()
+
+
+def _display_config(settings: CamoufoxServerSettings) -> dict[str, int]:
+    work_height = max(1, settings.screen_height - settings.panel_height)
+    return {
+        "screen.width": settings.screen_width,
+        "screen.height": settings.screen_height,
+        "screen.availWidth": settings.screen_width,
+        "screen.availHeight": work_height,
+        "window.outerWidth": settings.screen_width,
+        "window.outerHeight": work_height,
+        "window.screenX": 0,
+        "window.screenY": 0,
+    }
 
 
 def _get_proxy(settings: CamoufoxServerSettings) -> dict[str, str] | None:
@@ -41,16 +54,15 @@ def run():
     container = make_container(CamoufoxServerProvider())
     settings = container.get(CamoufoxServerSettings)
 
+    config = _display_config(settings)
     launch_server(
         host=settings.playwright_host,
         port=settings.playwright_port,
         ws_path=settings.playwright_path,
-        screen=Screen(
-            max_width=settings.screen_width,
-            max_height=settings.screen_height,
-        ),
+        config=config,
         os=settings.camoufox_os,
         proxy=_get_proxy(settings),
         humanize=True,
         geoip=True,
+        i_know_what_im_doing=True,
     )
