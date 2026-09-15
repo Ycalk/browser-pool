@@ -29,7 +29,7 @@ class StopContainerCommand(Command[StopContainerParameters, None]):
 
     @override
     async def __call__(self, parameters: StopContainerParameters) -> None:
-        with _tracer.start_as_current_span("container_driver.start_container") as span:
+        with _tracer.start_as_current_span("container_driver.stop_container") as span:
             path = f"/containers/{parameters.id}/stop"
             span.set_attribute("request.container.id", parameters.id)
             span.set_attribute("request.signal", parameters.signal or "default")
