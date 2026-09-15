@@ -8,7 +8,11 @@ from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
 from .client import DockerClient
 from .commands import (
     CreateContainerCommand,
+    CreateNetworkCommand,
+    ListNetworksCommand,
+    PruneNetworksCommand,
     RemoveContainerCommand,
+    RemoveNetworkCommand,
     StartContainerCommand,
     StopContainerCommand,
 )
@@ -19,7 +23,11 @@ from .version import ensure_api_version
 class ContainerDriverProvider(Provider):
     commands: CompositeDependencySource = provide_all(
         CreateContainerCommand,
+        CreateNetworkCommand,
+        ListNetworksCommand,
+        PruneNetworksCommand,
         RemoveContainerCommand,
+        RemoveNetworkCommand,
         StartContainerCommand,
         StopContainerCommand,
         scope=Scope.REQUEST,

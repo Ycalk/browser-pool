@@ -16,6 +16,16 @@ from .container import (
     Ulimit,
     VolumeOptions,
 )
+from .network import (
+    NetworkConfig,
+    NetworkFilters,
+    NetworkIPAM,
+    NetworkIPAMConfig,
+    NetworkIPAMState,
+    NetworkOptions,
+    NetworkResponse,
+    NetworkSubnet,
+)
 from .version import DockerVersionResponse
 
 __all__ = [
@@ -36,4 +46,12 @@ __all__ = [
     "EndpointConfig",
     "IPAMConfig",
     "Healthcheck",
+    "NetworkConfig",
+    "NetworkFilters",
+    "NetworkIPAM",
+    "NetworkIPAMConfig",
+    "NetworkIPAMState",
+    "NetworkOptions",
+    "NetworkResponse",
+    "NetworkSubnet",
 ]
