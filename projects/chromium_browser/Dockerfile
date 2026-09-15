@@ -4,9 +4,9 @@ FROM debian:${DEBIAN_TAG}
 RUN export DEBIAN_FRONTEND=noninteractive && \
     apt-get update && apt-get install -y --no-install-recommends \
     curl ca-certificates matchbox-window-manager socat xz-utils tzdata \
-    x11-utils libnspr4 libnss3 libatk1.0-0 libatk-bridge2.0-0 \
-    libcups2 libxkbcommon0 libasound2 libcairo2 libxdamage1 \
-    fonts-liberation fonts-noto-color-emoji \
+    x11-utils  libavformat-dev libnspr4 libnss3 libatk1.0-0 libatk-bridge2.0-0 \
+    libcups2 libxkbcommon0 libasound2 libcairo2 libxdamage1 libavformat-dev \
+    libswscale-dev fonts-liberation fonts-noto-color-emoji \
     && rm -rf /var/lib/apt/lists/*
 
 ARG CHROMIUM_VERSION=152.0.7977.64-1

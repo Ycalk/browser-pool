@@ -1,9 +1,9 @@
-name: build-browser-image
+name: build-chromium-browser-image
 
 on:
   push:
     tags:
-      - 'browser-*'
+      - 'chromium-browser-*'
 
 permissions:
   contents: read
@@ -22,13 +22,13 @@ jobs:
       - name: Extract version from tag
         id: version
         run: |
-          TAG="${GITHUB_REF_NAME#browser-}"
+          TAG="${GITHUB_REF_NAME#chromium-browser-}"
           if ! [[ "$TAG" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "The tag '$GITHUB_REF_NAME' does not match the browser-X.Y.Z pattern." >&2
+            echo "The tag '$GITHUB_REF_NAME' does not match the chromium-browser-X.Y.Z pattern." >&2
             exit 1
           fi
           echo "version=$TAG" >> "$GITHUB_OUTPUT"
-          IMAGE_NAME="$(echo "${{ github.repository }}/browser" | tr '[:upper:]' '[:lower:]')"
+          IMAGE_NAME="$(echo "${{ github.repository }}/chromium-browser" | tr '[:upper:]' '[:lower:]')"
           echo "image_name=$IMAGE_NAME" >> "$GITHUB_OUTPUT"
 
       - name: Set up Docker Buildx
@@ -49,14 +49,14 @@ jobs:
           tags: |
             type=raw,value=${{ steps.version.outputs.version }}
           labels: |
-            org.opencontainers.image.title=browser
+            org.opencontainers.image.title=chromium-browser
             org.opencontainers.image.description=Chromium + KasmVNC browser image
 
       - name: Build and push
         uses: docker/build-push-action@v7
         with:
-          context: projects/browser
-          file: projects/browser/Dockerfile
+          context: projects/chromium_browser
+          file: projects/chromium_browser/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

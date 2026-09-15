@@ -1,0 +1,108 @@
+name: build-camoufox-browser-image
+
+on:
+  push:
+    tags:
+      - 'camoufox-browser-*'
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          TAG="${GITHUB_REF_NAME#camoufox-browser-}"
+          if ! [[ "$TAG" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "The tag '$GITHUB_REF_NAME' does not match the camoufox-browser-X.Y.Z pattern." >&2
+            exit 1
+          fi
+          echo "version=$TAG" >> "$GITHUB_OUTPUT"
+          IMAGE_NAME="$(echo "${{ github.repository }}/camoufox-browser" | tr '[:upper:]' '[:lower:]')"
+          echo "image_name=$IMAGE_NAME" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version-file: .python-version
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: 2.4.2
+          virtualenvs-in-project: false
+
+      - name: Install Poetry plugins and workspace dependencies
+        run: |
+          poetry self add poetry-multiproject-plugin
+          poetry self add poetry-polylith-plugin
+          poetry self add poetry-plugin-export
+          poetry install
+
+      - name: Build project artifacts
+        working-directory: projects/camoufox_browser
+        run: |
+          poetry install
+          poetry build-project
+          poetry export -f requirements.txt --output requirements.txt --without-hashes
+
+      - name: Resolve wheel file name
+        id: wheel
+        run: |
+          shopt -s nullglob
+          wheels=(projects/camoufox_browser/dist/*.whl)
+          if [ "${#wheels[@]}" -ne 1 ]; then
+            echo "Expected exactly one wheel in projects/camoufox_browser/dist, found ${#wheels[@]}." >&2
+            exit 1
+          fi
+          echo "name=$(basename "${wheels[0]}")" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (labels)
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ${{ env.REGISTRY }}/${{ steps.version.outputs.image_name }}
+          tags: |
+            type=raw,value=${{ steps.version.outputs.version }}
+          labels: |
+            org.opencontainers.image.title=camoufox-browser
+            org.opencontainers.image.description=Camoufox + KasmVNC browser image
+
+      - name: Build and push
+        uses: docker/build-push-action@v7
+        with:
+          context: projects/camoufox_browser
+          file: projects/camoufox_browser/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            CAMOUFOX_VERSION=152.0.4-beta.30
+            KASMVNC_VERSION=1.5.0
+            wheel=${{ steps.wheel.outputs.name }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Summary
+        run: |
+          echo "The image has been published: \`${{ env.REGISTRY }}/${{ steps.version.outputs.image_name }}:${{ steps.version.outputs.version }}\`" >> "$GITHUB_STEP_SUMMARY"
