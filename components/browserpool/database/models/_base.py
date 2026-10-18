@@ -179,6 +179,3 @@ class BaseDAO[
         obj = self.model(**dict(parameters))
         await self.save(obj)
         return obj
-
-    async def commit(self) -> None:
-        await self._session.commit()

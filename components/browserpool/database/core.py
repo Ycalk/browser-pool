@@ -1,13 +1,14 @@
 from collections.abc import AsyncGenerator, AsyncIterable, Callable
 from contextlib import asynccontextmanager
-from typing import Any
+from typing import Any, NewType
 
 import structlog
 from dishka import AsyncContainer, Provider, Scope, provide, provide_all
 from dishka.dependency_source import CompositeDependencySource
 from opentelemetry import trace
 from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
-from sqlalchemy import URL, event, text
+from sqlalchemy import URL, event
+from sqlalchemy.engine import Connection
 from sqlalchemy.engine.interfaces import DBAPIConnection
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
@@ -20,6 +21,11 @@ from sqlalchemy.pool import AsyncAdaptedQueuePool
 from .models import BrowserDAO, DAOSession, ReadSession, SandboxDAO, WriteSession
 from .settings import DatabaseSettings
 
+ReadEngine = NewType("ReadEngine", AsyncEngine)
+WriteEngine = NewType("WriteEngine", AsyncEngine)
+ReadSessionMaker = NewType("ReadSessionMaker", async_sessionmaker[AsyncSession])
+WriteSessionMaker = NewType("WriteSessionMaker", async_sessionmaker[AsyncSession])
+
 
 class _DAOScope[TSession: DAOSession]:
     def __init__(self, dao_session: TSession) -> None:
@@ -30,9 +36,6 @@ class _DAOScope[TSession: DAOSession]:
         dao_cls: Callable[[TSession], TDAO],
     ) -> TDAO:
         return dao_cls(self._dao_session)
-
-    async def commit(self) -> None:
-        await self._dao_session.session.commit()
 
 
 class DAOFactory:
@@ -62,13 +65,13 @@ class DatabaseProvider(Provider):
             database=database_settings.sqlite_database_path,
         )
 
-    @provide(scope=Scope.APP)
-    async def engine(
+    def _create_engine(
         self,
         database_url: URL,
         database_settings: DatabaseSettings,
-    ) -> AsyncIterable[AsyncEngine]:
-        logger = structlog.get_logger("database")
+        *,
+        begin_immediate: bool,
+    ) -> AsyncEngine:
         engine = create_async_engine(
             database_url,
             echo=False,
@@ -84,9 +87,7 @@ class DatabaseProvider(Provider):
 
         busy_timeout_ms = int(database_settings.sqlite_pool_timeout * 1000)
 
-        def set_sqlite_pragma(
-            dbapi_connection: DBAPIConnection, **_kwargs: Any
-        ) -> None:
+        def set_sqlite_pragma(dbapi_connection: DBAPIConnection, **_kw: Any) -> None:
             cursor = dbapi_connection.cursor()
             cursor.execute("PRAGMA journal_mode=WAL;")
             cursor.execute(f"PRAGMA busy_timeout={busy_timeout_ms};")
@@ -95,42 +96,95 @@ class DatabaseProvider(Provider):
             cursor.close()
 
         event.listen(engine.sync_engine, "connect", set_sqlite_pragma, named=True)
+
+        if begin_immediate:
+
+            def do_begin_immediate(conn: Connection) -> None:
+                conn.exec_driver_sql("BEGIN IMMEDIATE")
+
+            event.listen(engine.sync_engine, "begin", do_begin_immediate, named=True)
+
         SQLAlchemyInstrumentor().instrument(
             engine=engine.sync_engine,
             tracer_provider=trace.get_tracer_provider(),
             enable_commenter=True,
             commenter_options={"trace_id": True, "span_id": True},
         )
-        logger.info("database_engine_created")
+        return engine
+
+    @provide(scope=Scope.APP)
+    async def read_engine(
+        self,
+        database_url: URL,
+        database_settings: DatabaseSettings,
+    ) -> AsyncIterable[ReadEngine]:
+        logger = structlog.get_logger("database")
+        engine = self._create_engine(
+            database_url, database_settings, begin_immediate=False
+        )
+        logger.info("database_read_engine_created")
         try:
-            yield engine
+            yield ReadEngine(engine)
         finally:
-            logger.info("disposing_database_engine")
+            logger.info("disposing_database_read_engine")
             await engine.dispose()
 
     @provide(scope=Scope.APP)
-    def session_maker(self, engine: AsyncEngine) -> async_sessionmaker[AsyncSession]:
-        return async_sessionmaker(
-            engine,
-            class_=AsyncSession,
-            expire_on_commit=False,
-            autoflush=False,
+    async def write_engine(
+        self,
+        database_url: URL,
+        database_settings: DatabaseSettings,
+    ) -> AsyncIterable[WriteEngine]:
+        logger = structlog.get_logger("database")
+        engine = self._create_engine(
+            database_url, database_settings, begin_immediate=True
+        )
+        logger.info("database_write_engine_created")
+        try:
+            yield WriteEngine(engine)
+        finally:
+            logger.info("disposing_database_write_engine")
+            await engine.dispose()
+
+    @provide(scope=Scope.APP)
+    def read_session_maker(self, read_engine: ReadEngine) -> ReadSessionMaker:
+        return ReadSessionMaker(
+            async_sessionmaker(
+                read_engine,
+                class_=AsyncSession,
+                expire_on_commit=False,
+                autoflush=False,
+            )
+        )
+
+    @provide(scope=Scope.APP)
+    def write_session_maker(self, write_engine: WriteEngine) -> WriteSessionMaker:
+        return WriteSessionMaker(
+            async_sessionmaker(
+                write_engine,
+                class_=AsyncSession,
+                expire_on_commit=False,
+                autoflush=False,
+            )
         )
 
     @provide(scope=Scope.REQUEST)
     async def read_session(
-        self, session_maker: async_sessionmaker[AsyncSession]
+        self, read_session_maker: ReadSessionMaker
     ) -> AsyncIterable[ReadSession]:
-        async with session_maker() as session:
-            yield ReadSession(session=session)
+        async with read_session_maker() as session, session.begin():
+            exc = yield ReadSession(session=session)
+            if exc is not None:
+                await session.rollback()
 
     @provide(scope=Scope.REQUEST)
     async def write_session(
-        self, session_maker: async_sessionmaker[AsyncSession]
+        self, write_session_maker: WriteSessionMaker
     ) -> AsyncIterable[WriteSession]:
-        async with session_maker() as session:
-            await session.execute(text("BEGIN IMMEDIATE"))
-            yield WriteSession(session=session)
+        async with write_session_maker() as session, session.begin():
+            exc = yield WriteSession(session=session)
+            if exc is not None:
+                await session.rollback()
 
     data_access_object_factory: CompositeDependencySource = provide(
         DAOFactory, scope=Scope.APP
