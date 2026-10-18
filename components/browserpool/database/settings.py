@@ -12,11 +12,8 @@ class DatabaseSettings(BaseSettings):
         extra="ignore",
     )
 
-    postgres_user: str
-    postgres_password: str
-    postgres_db: str
-    postgres_host: str
-    postgres_port: int
+    sqlite_database_path: str = "browserpool.db"
 
-    postgres_pool_size: int = 10
-    postgres_max_overflow: int = 20
+    sqlite_pool_size: int = 5
+    sqlite_max_overflow: int = 10
+    sqlite_pool_timeout: float = 30

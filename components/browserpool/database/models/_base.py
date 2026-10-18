@@ -1,27 +1,64 @@
 from abc import ABC, abstractmethod
 from collections.abc import Mapping, Sequence
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import StrEnum
-from typing import Any, cast, get_args, get_origin
+from typing import Any, cast, final, get_args, get_origin, override
 
-from sqlalchemy import func, insert, select
+from sqlalchemy import BigInteger, TypeDecorator, func, insert, select
 from sqlalchemy.ext.asyncio import AsyncAttrs, AsyncSession
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy.orm.interfaces import ORMOption
-from sqlalchemy.types import TIMESTAMP
+from sqlalchemy.sql.type_api import TypeEngine
+
+
+class IntUnixTimestamp(TypeDecorator[datetime]):
+    impl: TypeEngine[Any] | type[TypeEngine[Any]] = BigInteger
+    cache_ok: bool | None = True
+
+    @override
+    def process_bind_param(self, value: Any, dialect: Any) -> int | None:
+        if value is None:
+            return None
+        if isinstance(value, datetime):
+            if value.tzinfo is None:
+                value = value.replace(tzinfo=UTC)
+            return int(value.timestamp())
+        if isinstance(value, (int, float)):
+            return int(value)
+
+        raise TypeError(f"Expected datetime or int, got {type(value)}")
+
+    @override
+    def process_result_value(self, value: Any, dialect: Any) -> datetime | None:
+        if value is None:
+            return None
+        return datetime.fromtimestamp(value, tz=UTC)
+
+
+class DAOSession(ABC):
+    def __init__(self, session: AsyncSession) -> None:
+        self.session: AsyncSession = session
+
+
+@final
+class ReadSession(DAOSession):
+    pass
+
+
+@final
+class WriteSession(DAOSession):
+    pass
 
 
 class BaseModel(AsyncAttrs, DeclarativeBase):
     __abstract__: bool = True
     created_at: Mapped[datetime] = mapped_column(
-        TIMESTAMP(timezone=True), server_default=func.now()
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now()
+        IntUnixTimestamp, default=lambda: datetime.now(UTC)
     )
 
 
 class BaseDAO[
+    TSession: DAOSession,
     TModel: BaseModel,
     TId,
     TLoadEnum: StrEnum,
@@ -29,8 +66,14 @@ class BaseDAO[
 ](ABC):
     model: type[TModel]
 
-    def __init__(self, session: AsyncSession):
-        self._session: AsyncSession = session
+    def __init__(self, dao_session: TSession):
+        self._session: AsyncSession = dao_session.session
+        if not isinstance(dao_session, (ReadSession, WriteSession)):
+            raise TypeError(
+                f"Unexpected session type. Got: {dao_session.__class__.__name__}. "
+                + "Expect: ReadSession or WriteSession"
+            )
+        self._readonly: bool = isinstance(dao_session, ReadSession)
 
     def __init_subclass__(cls, **kwargs: Any):
         super().__init_subclass__(**kwargs)
@@ -39,10 +82,10 @@ class BaseDAO[
             if not (isinstance(origin, type) and issubclass(origin, BaseDAO)):
                 continue
             args = get_args(base)
-            if len(args) != 4:
+            if len(args) != 5:
                 continue
 
-            model_type, __, load_enum_type, _ = args
+            ___, model_type, __, load_enum_type, _ = args
             if not (isinstance(model_type, type) and issubclass(model_type, BaseModel)):
                 raise TypeError(
                     f"{cls.__name__}: Unexpected type for TModel. "
@@ -57,22 +100,15 @@ class BaseDAO[
                     f"{cls.__name__}: Unexpected type for TLoadEnum. "
                     + f"Got: {load_enum_type.__name__} ({type(load_enum_type)})"
                 )
-            load_mapper = cls._load_mapper()
-            for member in load_enum_type:
-                if member not in load_mapper:
-                    raise ValueError(f"Cannot find {member} key in _load_mapper")
-
             return
 
-        if not hasattr(cls, "model") or not hasattr(cls, "_primary_key_column"):
-            raise TypeError(
-                f"Failed to initialize {cls.__name__}. Not enough generic parameters"
-            )
+        raise TypeError(
+            f"Failed to initialize {cls.__name__}. Not enough generic parameters"
+        )
 
     @classmethod
     @abstractmethod
-    def _load_mapper(cls) -> dict[TLoadEnum, ORMOption | Sequence[ORMOption]]:
-        return {}
+    def _load_mapper(cls) -> dict[TLoadEnum, ORMOption | Sequence[ORMOption]]: ...
 
     def get_options(self, includes: Sequence[TLoadEnum]) -> Sequence[ORMOption]:
         options: list[ORMOption] = []
@@ -87,6 +123,9 @@ class BaseDAO[
         return options
 
     async def save(self, obj: TModel) -> TModel:
+        if self._readonly:
+            raise RuntimeError("The session is readonly cannot save")
+
         self._session.add(obj)
         await self._session.flush()
         await self._session.refresh(
@@ -96,6 +135,9 @@ class BaseDAO[
         return obj
 
     async def delete(self, obj: TModel) -> None:
+        if self._readonly:
+            raise RuntimeError("The session is readonly cannot delete")
+
         await self._session.delete(obj)
         await self._session.flush()
 
@@ -118,6 +160,9 @@ class BaseDAO[
         return await self.find_by_id(id) is not None
 
     async def bulk_create(self, parameters: list[TCreateParameters]) -> list[TModel]:
+        if self._readonly:
+            raise RuntimeError("The session is readonly cannot create")
+
         if len(parameters) == 0:
             return []
 
@@ -128,6 +173,9 @@ class BaseDAO[
         return list(result.all())
 
     async def create(self, parameters: TCreateParameters) -> TModel:
+        if self._readonly:
+            raise RuntimeError("The session is readonly cannot create")
+
         obj = self.model(**dict(parameters))
         await self.save(obj)
         return obj
