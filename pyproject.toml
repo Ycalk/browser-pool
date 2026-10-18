@@ -4,33 +4,31 @@ version = "0.1.0"
 description = ""
 authors = ["ycalk (Лосев Алексей) <alosev752@gmail.com>"]
 packages = [
-    {include = "browserpool/migrator",from = "bases"},
     {include = "browserpool/logging",from = "components"},
-    {include = "browserpool/database",from = "components"},
     {include = "browserpool/container_driver",from = "components"},
     {include = "browserpool/domain_core",from = "components"},
     {include = "browserpool/camoufox_server",from = "bases"},
+    {include = "browserpool/browser",from = "components"},
 ]
 [tool.poetry.dependencies]
 python = ">=3.13,<3.15"
-fastapi = {extras = ["standart"], version = "^0.141.1"}
+fastapi = {extras = ["standart"], version = "^0.146.0"}
 dishka = {extras = ["fastapi"], version = "^1.10.1"}
-pydantic-settings = "^2.15.0"
-sqlalchemy = {extras = ["asyncio"], version = "^2.0.52"}
-alembic = "^1.19.1"
-psycopg = {extras = ["binary", "pool"], version = "^3.3.4"}
+pydantic-settings = "^2.16.0"
+sqlalchemy = {extras = ["asyncio"], version = "^2.1.5"}
+aiosqlite = "^0.22.1"
 structlog = "^26.1.0"
-opentelemetry-api = "^1.44.0"
-opentelemetry-sdk = "^1.44.0"
-opentelemetry-exporter-otlp = "^1.44.0"
-opentelemetry-instrumentation-sqlalchemy = "^0.65b0"
-opentelemetry-instrumentation-fastapi = "^0.65b0"
-opentelemetry-instrumentation-psycopg = "^0.65b0"
-opentelemetry-instrumentation-httpx = "^0.65b0"
+opentelemetry-api = "^1.45.1"
+opentelemetry-sdk = "^1.45.1"
+opentelemetry-exporter-otlp = "^1.45.1"
+opentelemetry-instrumentation-fastapi = "^0.66b1"
+opentelemetry-instrumentation-httpx = "^0.66b1"
+opentelemetry-instrumentation-sqlalchemy = "^0.66b1"
 pytest = "^9.1.1"
 pytest-asyncio = "^1.4.0"
 httpx = "^0.28.1"
-camoufox = {extras = ["geoip"], version = "^0.5.6"}
+camoufox = {extras = ["geoip"], version = "^0.5.8"}
+alembic = "^1.20.0"
 
 [tool.basedpyright]
 typeCheckingMode = "recommended"
@@ -54,9 +52,16 @@ reportUnnecessaryTypeIgnoreComment = false
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP"]
 
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_test_loop_scope = "function"
+testpaths = ["test"]
+
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
 start_container = "development.start_container:run"
+start_browser = "development.start_browser:run"
+alembic = "browserpool.migrator:run"
