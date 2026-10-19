@@ -13,7 +13,7 @@ class ServiceSettings(BaseSettings):
     )
 
     browser_limit: int
-    browser_slot_network_prefix: str = "browserpool-slot"
+    browser_slot_network_prefix: str = "browserpool-sandbox"
     browser_container_prefix: str = "browserpool-browser"
     browser_min_idle_ttl_seconds: int = 60
     browser_max_idle_ttl_seconds: int = 60 * 60 * 24
