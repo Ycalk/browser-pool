@@ -13,9 +13,7 @@ from .exceptions import DockerFatalError
 
 _tracer: Final[trace.Tracer] = trace.get_tracer(__name__)
 _logger: Final[structlog.BoundLogger] = structlog.get_logger(__name__)
-_adapter: Final[TypeAdapter[list[NetworkResponse]]] = TypeAdapter(
-    list[NetworkResponse]
-)
+_adapter: Final[TypeAdapter[list[NetworkResponse]]] = TypeAdapter(list[NetworkResponse])
 
 
 class ListNetworksCommand(Command[LabelFilters, list[NetworkResponse]]):

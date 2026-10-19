@@ -639,9 +639,7 @@ class ContainerDetailResponse(BaseModel):
     """`GET /containers/{id}/json`: lifecycle state, config and attached networks."""
 
     id: str = Field(validation_alias="Id")
-    name: Annotated[
-        str, BeforeValidator(_strip_slash), Field(validation_alias="Name")
-    ]
+    name: Annotated[str, BeforeValidator(_strip_slash), Field(validation_alias="Name")]
     image: str = Field(validation_alias="Image")
     created: str = Field(validation_alias="Created")
     state: ContainerStateResponse = Field(validation_alias="State")
