@@ -74,7 +74,9 @@ async def test_writers_are_serialized(app_container: AsyncContainer) -> None:
             starts.append(time.monotonic())
             await asyncio.sleep(HOLD)
             await sd_w.create(
-                SandboxCreateParameters(network_id=f"ser-{tag}", network_name=tag)
+                SandboxCreateParameters(
+                    network_id=f"ser-{tag}", network_name=tag, index=0
+                )
             )
 
     await asyncio.gather(writer("w1"), writer("w2"))
@@ -105,7 +107,7 @@ async def test_reader_not_blocked_by_writer(
             writer_begin.set()
             await asyncio.sleep(HOLD)
             await sd_w.create(
-                SandboxCreateParameters(network_id="blk-w", network_name="w")
+                SandboxCreateParameters(network_id="blk-w", network_name="w", index=0)
             )
         writer_committed.set()
 
@@ -142,7 +144,7 @@ async def test_reader_sees_committed_snapshot_not_uncommitted_write(
         async with app_container() as req:
             sd_w = await req.get(SandboxDAO[WriteSession])
             await sd_w.create(
-                SandboxCreateParameters(network_id="snap-w", network_name="w")
+                SandboxCreateParameters(network_id="snap-w", network_name="w", index=0)
             )
             writer_wrote.set()
             await asyncio.sleep(HOLD)
@@ -181,7 +183,7 @@ async def test_many_readers_concurrent_with_writer(
             writer_begin.set()
             await asyncio.sleep(HOLD)
             await sd_w.create(
-                SandboxCreateParameters(network_id="many-w", network_name="w")
+                SandboxCreateParameters(network_id="many-w", network_name="w", index=0)
             )
         writer_done.set()
 

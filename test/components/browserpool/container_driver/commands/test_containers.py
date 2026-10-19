@@ -172,9 +172,7 @@ async def test_inspect_parses_environment_networks_and_unset_times():
     assert container.state.status == "created"
     assert container.state.started_at is None
     assert container.state.finished_at is None
-    assert (
-        container.environment["BROWSER_PROXY"] == "http://user:pass@proxy.local:8000"
-    )
+    assert container.environment["BROWSER_PROXY"] == "http://user:pass@proxy.local:8000"
     assert container.labels == {"browserpool.managed": "true"}
     assert container.networks["browserpool-net-0"].ip_address == "10.100.0.2"
 
@@ -188,4 +186,3 @@ async def test_inspect_of_missing_container_raises_not_found():
 
     with pytest.raises(DockerNotFoundException):
         await command(InspectContainerParameters(id="browserpool-x"))
-

@@ -8,7 +8,10 @@ packages = [
     {include = "browserpool/container_driver",from = "components"},
     {include = "browserpool/domain_core",from = "components"},
     {include = "browserpool/camoufox_server",from = "bases"},
-    {include = "browserpool/browser",from = "components"},
+    {include = "browserpool/migrator",from = "bases"},
+    {include = "browserpool/variant",from = "components"},
+    {include = "browserpool/service",from = "components"},
+    {include = "browserpool/database",from = "components"},
 ]
 [tool.poetry.dependencies]
 python = ">=3.13,<3.15"

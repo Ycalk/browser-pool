@@ -69,7 +69,9 @@ async def test_create_and_find_by_id_roundtrip(
 ) -> None:
     """A sandbox written via WriteSession is visible inside the same transaction."""
     created = await sandbox_write_dao.create(
-        SandboxCreateParameters(network_id="net-create-1", network_name="roundtrip")
+        SandboxCreateParameters(
+            network_id="net-create-1", network_name="roundtrip", index=0
+        )
     )
     assert created.network_id == "net-create-1"
     assert created.network_name == "roundtrip"
@@ -86,7 +88,7 @@ async def test_count_increments_after_create(
     """count() reflects inserts within the same write transaction."""
     initial = await sandbox_write_dao.count()
     await sandbox_write_dao.create(
-        SandboxCreateParameters(network_id="net-count", network_name="n")
+        SandboxCreateParameters(network_id="net-count", network_name="n", index=0)
     )
     after = await sandbox_write_dao.count()
     assert after == initial + 1
@@ -96,7 +98,7 @@ async def test_exists_by_id(sandbox_write_dao: SandboxDAO[WriteSession]) -> None
     """exists_by_id returns True for present, False for absent."""
     assert await sandbox_write_dao.exists_by_id("missing") is False
     await sandbox_write_dao.create(
-        SandboxCreateParameters(network_id="net-exists", network_name="x")
+        SandboxCreateParameters(network_id="net-exists", network_name="x", index=0)
     )
     assert await sandbox_write_dao.exists_by_id("net-exists") is True
 
@@ -104,7 +106,7 @@ async def test_exists_by_id(sandbox_write_dao: SandboxDAO[WriteSession]) -> None
 async def test_bulk_create(sandbox_write_dao: SandboxDAO[WriteSession]) -> None:
     """bulk_create inserts all rows and returns them."""
     params = [
-        SandboxCreateParameters(network_id=f"bulk-{i}", network_name=f"b{i}")
+        SandboxCreateParameters(network_id=f"bulk-{i}", network_name=f"b{i}", index=0)
         for i in range(3)
     ]
     rows = await sandbox_write_dao.bulk_create(params)
@@ -121,7 +123,7 @@ async def test_bulk_create_empty_is_noop(
 async def test_delete(sandbox_write_dao: SandboxDAO[WriteSession]) -> None:
     """delete removes the object and flushes."""
     created = await sandbox_write_dao.create(
-        SandboxCreateParameters(network_id="net-del", network_name="d")
+        SandboxCreateParameters(network_id="net-del", network_name="d", index=0)
     )
     assert await sandbox_write_dao.exists_by_id("net-del") is True
     await sandbox_write_dao.delete(created)
@@ -144,7 +146,7 @@ async def test_persisted_write_visible_to_read_after_scope_exit(
     async with request_container:
         sd_w = await request_container.get(SandboxDAO[WriteSession])
         await sd_w.create(
-            SandboxCreateParameters(network_id="net-persist", network_name="p")
+            SandboxCreateParameters(network_id="net-persist", network_name="p", index=0)
         )
     async with request_container:
         sd_r = await request_container.get(SandboxDAO[ReadSession])
@@ -160,7 +162,9 @@ async def test_find_by_id_with_includes_loads_relationship(
     async with request_container:
         sd_w = await request_container.get(SandboxDAO[WriteSession])
         await sd_w.create(
-            SandboxCreateParameters(network_id="net-inc", network_name="parent")
+            SandboxCreateParameters(
+                network_id="net-inc", network_name="parent", index=0
+            )
         )
         bd_w = await request_container.get(BrowserDAO[WriteSession])
         await bd_w.create(
@@ -189,7 +193,7 @@ async def test_cascade_delete_browsers(
     async with request_container:
         sd_w = await request_container.get(SandboxDAO[WriteSession])
         await sd_w.create(
-            SandboxCreateParameters(network_id="net-casc", network_name="c")
+            SandboxCreateParameters(network_id="net-casc", network_name="c", index=0)
         )
         bd_w = await request_container.get(BrowserDAO[WriteSession])
         await bd_w.create(

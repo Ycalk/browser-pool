@@ -30,9 +30,15 @@ async def test_multiple_writes_in_one_scope_are_atomic(
 
     async with app_container() as req:
         sd_w = await req.get(SandboxDAO[WriteSession])
-        await sd_w.create(SandboxCreateParameters(network_id="a", network_name="n"))
-        await sd_w.create(SandboxCreateParameters(network_id="b", network_name="n"))
-        await sd_w.create(SandboxCreateParameters(network_id="c", network_name="n"))
+        await sd_w.create(
+            SandboxCreateParameters(network_id="a", network_name="n", index=0)
+        )
+        await sd_w.create(
+            SandboxCreateParameters(network_id="b", network_name="n", index=0)
+        )
+        await sd_w.create(
+            SandboxCreateParameters(network_id="c", network_name="n", index=0)
+        )
         # Visible within the open transaction.
         assert await sd_w.count() == 3
 
@@ -66,7 +72,7 @@ async def test_write_scope_release_allows_next_writer(
             w1_started.set()
             await asyncio.sleep(HOLD)
             await sd_w.create(
-                SandboxCreateParameters(network_id="w1", network_name="n")
+                SandboxCreateParameters(network_id="w1", network_name="n", index=0)
             )
 
     async def w2() -> None:
@@ -77,7 +83,7 @@ async def test_write_scope_release_allows_next_writer(
             events.append(time.monotonic())
             w2_started.set()
             await sd_w.create(
-                SandboxCreateParameters(network_id="w2", network_name="n")
+                SandboxCreateParameters(network_id="w2", network_name="n", index=0)
             )
 
     await asyncio.gather(w1(), w2())
@@ -104,10 +110,10 @@ async def test_failed_write_rolls_back_entire_scope(
         async with app_container() as req:
             sd_w = await req.get(SandboxDAO[WriteSession])
             await sd_w.create(
-                SandboxCreateParameters(network_id="rb-1", network_name="n")
+                SandboxCreateParameters(network_id="rb-1", network_name="n", index=0)
             )
             await sd_w.create(
-                SandboxCreateParameters(network_id="rb-2", network_name="n")
+                SandboxCreateParameters(network_id="rb-2", network_name="n", index=0)
             )
             raise ValueError("fail mid-transaction")
     except ValueError:
@@ -130,13 +136,17 @@ async def test_sequential_writes_each_get_fresh_transaction(
     """
     async with app_container() as req:
         sd_w = await req.get(SandboxDAO[WriteSession])
-        await sd_w.create(SandboxCreateParameters(network_id="seq-1", network_name="n"))
+        await sd_w.create(
+            SandboxCreateParameters(network_id="seq-1", network_name="n", index=0)
+        )
 
     async with app_container() as req:
         sd_w = await req.get(SandboxDAO[WriteSession])
         # Prior row visible in the fresh transaction.
         assert await sd_w.find_by_id("seq-1") is not None
-        await sd_w.create(SandboxCreateParameters(network_id="seq-2", network_name="n"))
+        await sd_w.create(
+            SandboxCreateParameters(network_id="seq-2", network_name="n", index=0)
+        )
 
     async with app_container() as req:
         sd_r = await req.get(SandboxDAO[ReadSession])
