@@ -7,18 +7,33 @@ from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
 
 from .client import DockerClient
 from .commands import (
+    ConnectNetworkCommand,
     CreateContainerCommand,
+    CreateNetworkCommand,
+    InspectContainerCommand,
+    ListContainersCommand,
+    ListNetworksCommand,
+    PruneNetworksCommand,
     RemoveContainerCommand,
+    RemoveNetworkCommand,
     StartContainerCommand,
     StopContainerCommand,
 )
 from .settings import ContainerDriverSettings
+from .version import ensure_api_version
 
 
 class ContainerDriverProvider(Provider):
     commands: CompositeDependencySource = provide_all(
+        ConnectNetworkCommand,
         CreateContainerCommand,
+        CreateNetworkCommand,
+        InspectContainerCommand,
+        ListContainersCommand,
+        ListNetworksCommand,
+        PruneNetworksCommand,
         RemoveContainerCommand,
+        RemoveNetworkCommand,
         StartContainerCommand,
         StopContainerCommand,
         scope=Scope.REQUEST,
@@ -39,4 +54,6 @@ class ContainerDriverProvider(Provider):
             timeout=settings.docker_timeout_seconds,
         ) as client:
             HTTPXClientInstrumentor.instrument_client(client)
-            yield DockerClient(client)
+            docker_client = DockerClient(client)
+            await ensure_api_version(docker_client, settings)
+            yield docker_client

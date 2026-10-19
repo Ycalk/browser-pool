@@ -3,7 +3,8 @@ from logging.config import fileConfig
 
 from alembic import context
 from browserpool.database import DatabaseProvider
-from browserpool.database.models._base import BaseModel
+from browserpool.database.core import WriteEngine
+from browserpool.database.models import BaseModel
 from browserpool.logging import LoggingSettings, LoggingSettingsProvider, setup_logging
 from dishka import make_async_container, make_container
 from sqlalchemy import URL
@@ -12,10 +13,6 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 
 if context.config.config_file_name is not None:
     fileConfig(context.config.config_file_name)
-
-
-def register_models() -> list[type[BaseModel]]:
-    return []
 
 
 def run_migrations_offline() -> None:
@@ -30,7 +27,6 @@ def run_migrations_offline() -> None:
     script output.
 
     """
-    register_models()
     container = make_container(DatabaseProvider(), LoggingSettingsProvider())
     setup_logging(container.get(LoggingSettings), "migrator")
 
@@ -63,10 +59,9 @@ async def run_async_migrations() -> None:
     and associate a connection with the context.
 
     """
-    register_models()
     container = make_async_container(DatabaseProvider(), LoggingSettingsProvider())
     setup_logging(await container.get(LoggingSettings), "migrator")
-    connectable = await container.get(AsyncEngine)
+    connectable: AsyncEngine = await container.get(WriteEngine)
 
     async with connectable.connect() as connection:
         await connection.run_sync(do_run_migrations)

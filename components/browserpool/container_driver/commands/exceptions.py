@@ -1,6 +1,7 @@
 from browserpool.domain_core import (
     DomainConflictException,
     DomainException,
+    DomainForbiddenException,
     DomainNotFoundException,
     FatalError,
 )
@@ -15,6 +16,10 @@ class DockerNotFoundException(DomainNotFoundException):
 
 
 class DockerConflictException(DomainConflictException):
+    pass
+
+
+class DockerForbiddenException(DomainForbiddenException):
     pass
 
 

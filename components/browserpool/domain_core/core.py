@@ -17,6 +17,10 @@ class DomainException(Exception):
         super().__init__(message)
 
 
+class DomainBadRequestException(DomainException):
+    pass
+
+
 class DomainUnauthorizedException(DomainException):
     pass
 

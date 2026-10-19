@@ -1,6 +1,11 @@
 from .container import (
     BindOptions,
     ContainerConfig,
+    ContainerDetailResponse,
+    ContainerNetwork,
+    ContainerPort,
+    ContainerStateResponse,
+    ContainerSummaryResponse,
     DeviceRequest,
     DriverConfig,
     EndpointConfig,
@@ -16,9 +21,22 @@ from .container import (
     Ulimit,
     VolumeOptions,
 )
+from .filters import LabelFilters
+from .network import (
+    NetworkConfig,
+    NetworkConnectConfig,
+    NetworkIPAM,
+    NetworkIPAMConfig,
+    NetworkIPAMState,
+    NetworkOptions,
+    NetworkResponse,
+    NetworkSubnet,
+)
+from .version import DockerVersionResponse
 
 __all__ = [
     "ContainerConfig",
+    "DockerVersionResponse",
     "HostConfig",
     "HostBind",
     "HostDevice",
@@ -34,4 +52,18 @@ __all__ = [
     "EndpointConfig",
     "IPAMConfig",
     "Healthcheck",
+    "LabelFilters",
+    "NetworkConfig",
+    "NetworkConnectConfig",
+    "NetworkIPAM",
+    "NetworkIPAMConfig",
+    "NetworkIPAMState",
+    "NetworkOptions",
+    "NetworkResponse",
+    "NetworkSubnet",
+    "ContainerDetailResponse",
+    "ContainerNetwork",
+    "ContainerPort",
+    "ContainerStateResponse",
+    "ContainerSummaryResponse",
 ]
