@@ -1,5 +1,6 @@
 from .core import (
     Command,
+    DomainBadRequestException,
     DomainConflictException,
     DomainException,
     DomainForbiddenException,
@@ -13,6 +14,7 @@ __all__ = [
     "Command",
     "ParameterlessCommand",
     "DomainException",
+    "DomainBadRequestException",
     "DomainUnauthorizedException",
     "DomainForbiddenException",
     "DomainNotFoundException",
