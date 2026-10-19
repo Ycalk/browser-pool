@@ -24,6 +24,7 @@ from .container import (
 from .filters import LabelFilters
 from .network import (
     NetworkConfig,
+    NetworkConnectConfig,
     NetworkIPAM,
     NetworkIPAMConfig,
     NetworkIPAMState,
@@ -53,6 +54,7 @@ __all__ = [
     "Healthcheck",
     "LabelFilters",
     "NetworkConfig",
+    "NetworkConnectConfig",
     "NetworkIPAM",
     "NetworkIPAMConfig",
     "NetworkIPAMState",

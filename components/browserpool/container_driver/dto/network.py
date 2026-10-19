@@ -2,9 +2,16 @@ from typing import Annotated
 
 from pydantic import BaseModel, BeforeValidator, Field, PlainSerializer
 
+from .container import EndpointConfig
+
 
 class NetworkOptions(BaseModel):
-    """Bridge driver options; ICC off keeps browsers isolated from each other."""
+    """Bridge driver options.
+
+    `enable_icc=False` drops traffic between every endpoint of the network,
+    including the pool service talking to the browser, so slot networks keep
+    the driver default and rely on one-browser-per-network isolation instead.
+    """
 
     enable_icc: Annotated[
         bool | None,
@@ -27,9 +34,9 @@ class NetworkIPAM(BaseModel):
     config: Annotated[
         list[NetworkIPAMConfig] | None, Field(serialization_alias="Config")
     ] = None
-    options: Annotated[
-        dict[str, str] | None, Field(serialization_alias="Options")
-    ] = None
+    options: Annotated[dict[str, str] | None, Field(serialization_alias="Options")] = (
+        None
+    )
 
 
 class NetworkConfig(BaseModel):
@@ -39,10 +46,19 @@ class NetworkConfig(BaseModel):
     enable_ipv4: Annotated[bool | None, Field(serialization_alias="EnableIPv4")] = None
     enable_ipv6: Annotated[bool | None, Field(serialization_alias="EnableIPv6")] = None
     ipam: Annotated[NetworkIPAM | None, Field(serialization_alias="IPAM")] = None
-    options: Annotated[
-        NetworkOptions | None, Field(serialization_alias="Options")
-    ] = None
+    options: Annotated[NetworkOptions | None, Field(serialization_alias="Options")] = (
+        None
+    )
     labels: Annotated[dict[str, str] | None, Field(serialization_alias="Labels")] = None
+
+
+class NetworkConnectConfig(BaseModel):
+    """`POST /networks/{id}/connect` body."""
+
+    container: Annotated[str, Field(serialization_alias="Container")]
+    endpoint_config: Annotated[
+        EndpointConfig | None, Field(serialization_alias="EndpointConfig")
+    ] = None
 
 
 class NetworkSubnet(BaseModel):

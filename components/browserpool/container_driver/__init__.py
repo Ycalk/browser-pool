@@ -1,4 +1,6 @@
 from .commands import (
+    ConnectNetworkCommand,
+    ConnectNetworkParameters,
     CreateContainerCommand,
     CreateContainerResponse,
     CreateNetworkCommand,
@@ -46,6 +48,7 @@ from .dto import (
     LogConfig,
     Mount,
     NetworkConfig,
+    NetworkConnectConfig,
     NetworkingConfig,
     NetworkIPAM,
     NetworkIPAMConfig,
@@ -61,6 +64,8 @@ from .dto import (
 __all__ = [
     "ContainerDriverProvider",
     "DockerVersionResponse",
+    "ConnectNetworkCommand",
+    "ConnectNetworkParameters",
     "CreateContainerCommand",
     "CreateContainerResponse",
     "CreateNetworkCommand",
@@ -108,6 +113,7 @@ __all__ = [
     "IPAMConfig",
     "Healthcheck",
     "NetworkConfig",
+    "NetworkConnectConfig",
     "NetworkIPAM",
     "NetworkIPAMConfig",
     "NetworkIPAMState",

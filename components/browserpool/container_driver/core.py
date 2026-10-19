@@ -7,6 +7,7 @@ from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
 
 from .client import DockerClient
 from .commands import (
+    ConnectNetworkCommand,
     CreateContainerCommand,
     CreateNetworkCommand,
     InspectContainerCommand,
@@ -24,6 +25,7 @@ from .version import ensure_api_version
 
 class ContainerDriverProvider(Provider):
     commands: CompositeDependencySource = provide_all(
+        ConnectNetworkCommand,
         CreateContainerCommand,
         CreateNetworkCommand,
         InspectContainerCommand,

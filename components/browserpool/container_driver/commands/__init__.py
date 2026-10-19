@@ -1,3 +1,4 @@
+from .connect_network import ConnectNetworkCommand, ConnectNetworkParameters
 from .create_container import CreateContainerCommand, CreateContainerResponse
 from .create_network import CreateNetworkCommand, CreateNetworkResponse
 from .exceptions import (
@@ -17,6 +18,8 @@ from .start_container import StartContainerCommand, StartContainerParameters
 from .stop_container import StopContainerCommand, StopContainerParameters
 
 __all__ = [
+    "ConnectNetworkCommand",
+    "ConnectNetworkParameters",
     "CreateContainerCommand",
     "CreateContainerResponse",
     "CreateNetworkCommand",
