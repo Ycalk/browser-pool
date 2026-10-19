@@ -3,16 +3,14 @@ from __future__ import annotations
 from collections.abc import Sequence
 from datetime import UTC, datetime
 from enum import StrEnum
-from typing import TYPE_CHECKING, NotRequired, TypedDict, override
+from typing import NotRequired, TypedDict, override
 
-from sqlalchemy import Boolean, ForeignKey, Integer, Text
+from sqlalchemy import Boolean, ForeignKey, Integer, Text, select
 from sqlalchemy.orm import Mapped, joinedload, mapped_column, relationship
 from sqlalchemy.orm.interfaces import ORMOption
 
 from ._base import BaseDAO, BaseModel, DAOSession, IntUnixTimestamp
-
-if TYPE_CHECKING:
-    from .sandbox import Sandbox
+from .sandbox import Sandbox
 
 
 class Browser(BaseModel):
@@ -43,6 +41,7 @@ class BrowserCreateParameters(TypedDict):
     last_touched_at: NotRequired[datetime]
     idle_ttl_seconds: int
     active: NotRequired[bool]
+    created_at: NotRequired[datetime]
 
 
 class BrowserLoadEnum(StrEnum):
@@ -56,3 +55,51 @@ class BrowserDAO[TSession: DAOSession](
     @override
     def _load_mapper(cls) -> dict[BrowserLoadEnum, ORMOption | Sequence[ORMOption]]:
         return {BrowserLoadEnum.SANDBOX: joinedload(Browser.sandbox)}
+
+    async def find_all(
+        self, *, includes: Sequence[BrowserLoadEnum] | None = None
+    ) -> Sequence[Browser]:
+        stmt = select(self.model).order_by(self.model.created_at)
+        if includes is not None:
+            stmt = stmt.options(*self.get_options(includes))
+        result = await self._session.scalars(stmt)
+        return result.all()
+
+    async def find_expired(
+        self,
+        *,
+        includes: Sequence[BrowserLoadEnum] | None = None,
+    ) -> Sequence[Browser]:
+        now = datetime.now(UTC)
+        stmt = (
+            select(self.model)
+            .where(
+                self.model.active.is_(True),
+                (self.model.last_touched_at + self.model.idle_ttl_seconds)
+                < int(now.timestamp()),
+            )
+            .order_by(self.model.created_at)
+        )
+        if includes is not None:
+            stmt = stmt.options(*self.get_options(includes))
+        result = await self._session.scalars(stmt)
+        return result.all()
+
+    async def find_active_in_inactive_sandboxes(
+        self,
+        *,
+        includes: Sequence[BrowserLoadEnum] | None = None,
+    ) -> Sequence[Browser]:
+        stmt = (
+            select(self.model)
+            .join(Sandbox)
+            .where(
+                self.model.active.is_(True),
+                Sandbox.active.is_(False),
+            )
+            .order_by(self.model.created_at)
+        )
+        if includes is not None:
+            stmt = stmt.options(*self.get_options(includes))
+        result = await self._session.scalars(stmt)
+        return result.all()

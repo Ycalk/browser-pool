@@ -142,7 +142,7 @@ class BaseDAO[
         await self._session.flush()
 
     async def find_by_id(
-        self, id: TId, includes: Sequence[TLoadEnum] | None = None
+        self, id: TId, *, includes: Sequence[TLoadEnum] | None = None
     ) -> TModel | None:
         return await self._session.get(
             self.model,
