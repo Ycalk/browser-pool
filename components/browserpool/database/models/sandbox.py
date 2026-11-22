@@ -50,9 +50,14 @@ class SandboxDAO[TSession: DAOSession](
     async def find_active_without_browsers(
         self, *, includes: Sequence[SandboxLoadEnum] | None = None
     ) -> Sequence[Sandbox]:
+        from .browser import Browser
+
         stmt = (
             select(self.model)
-            .where(self.model.active.is_(True), ~self.model.browsers.any())
+            .where(
+                self.model.active.is_(True),
+                ~self.model.browsers.any(Browser.active.is_(True)),
+            )
             .order_by(self.model.index)
         )
         if includes is not None:
