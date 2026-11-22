@@ -1,6 +1,8 @@
 import asyncio
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
+import httpx
 from browserpool.container_driver import ContainerDriverProvider
 from browserpool.database import DatabaseProvider
 from browserpool.domain_core import DomainException
@@ -21,6 +23,7 @@ from .exceptions import (
 from .routers import (
     browsers_router,
     node_router,
+    proxy_router,
 )
 from .scheme import ErrorResponse
 from .settings import EntrypointSettings
@@ -32,6 +35,19 @@ class EntrypointSettingsProvider(Provider):
         return EntrypointSettings()  # pyright: ignore
 
 
+class ProxyProvider(Provider):
+    @provide(scope=Scope.APP)
+    async def http_client(
+        self,
+        settings: EntrypointSettings,
+    ) -> AsyncIterator[httpx.AsyncClient]:
+        async with httpx.AsyncClient(
+            timeout=settings.proxy_timeout_seconds,
+            follow_redirects=False,
+        ) as client:
+            yield client
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     yield
@@ -41,6 +57,7 @@ async def lifespan(app: FastAPI):
 async def build_app() -> FastAPI:
     container = make_async_container(
         EntrypointSettingsProvider(),
+        ProxyProvider(),
         LoggingSettingsProvider(),
         DatabaseProvider(),
         ContainerDriverProvider(),
@@ -81,6 +98,7 @@ async def build_app() -> FastAPI:
 
     app.include_router(browsers_router, prefix=entrypoint_settings.methods_prefix)
     app.include_router(node_router, prefix=entrypoint_settings.methods_prefix)
+    app.include_router(proxy_router, prefix=entrypoint_settings.methods_prefix)
 
     app.get("/ping", include_in_schema=False)(lambda: "pong")
 
