@@ -3,9 +3,14 @@ from dishka.dependency_source import CompositeDependencySource
 
 from .commands import (
     CreateBrowserCommand,
+    GetBrowserCommand,
+    ListBrowsersCommand,
+    NodeInfoCommand,
     ReapIdleBrowsersCommand,
     ReconcileBrowsersCommand,
     ReconcileSandboxesCommand,
+    RemoveBrowserCommand,
+    TouchBrowserCommand,
 )
 from .settings import ServiceSettings
 
@@ -13,9 +18,14 @@ from .settings import ServiceSettings
 class ServiceProvider(Provider):
     commands: CompositeDependencySource = provide_all(
         CreateBrowserCommand,
+        GetBrowserCommand,
+        ListBrowsersCommand,
+        NodeInfoCommand,
         ReapIdleBrowsersCommand,
         ReconcileBrowsersCommand,
         ReconcileSandboxesCommand,
+        RemoveBrowserCommand,
+        TouchBrowserCommand,
         scope=Scope.REQUEST,
     )
 

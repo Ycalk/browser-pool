@@ -65,6 +65,19 @@ class BrowserDAO[TSession: DAOSession](
         result = await self._session.scalars(stmt)
         return result.all()
 
+    async def find_active(
+        self, *, includes: Sequence[BrowserLoadEnum] | None = None
+    ) -> Sequence[Browser]:
+        stmt = (
+            select(self.model)
+            .where(self.model.active.is_(True))
+            .order_by(self.model.created_at)
+        )
+        if includes is not None:
+            stmt = stmt.options(*self.get_options(includes))
+        result = await self._session.scalars(stmt)
+        return result.all()
+
     async def find_expired(
         self,
         *,

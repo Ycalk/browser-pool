@@ -1,8 +1,13 @@
 from browserpool.domain_core import (
     DomainBadRequestException,
     DomainConflictException,
+    DomainNotFoundException,
     FatalError,
 )
+
+
+class BrowserNotFound(DomainNotFoundException):
+    pass
 
 
 class InvalidBrowserError(FatalError):

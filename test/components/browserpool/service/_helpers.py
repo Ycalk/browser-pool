@@ -1,3 +1,4 @@
+from datetime import UTC, datetime
 from typing import Any
 
 import pytest
@@ -16,7 +17,12 @@ from browserpool.container_driver.dto.container import (
     EndpointConfig,
     NetworkingConfig,
 )
-from browserpool.database import BrowserDAO, SandboxDAO, WriteSession
+from browserpool.database import (
+    BrowserCreateParameters,
+    BrowserDAO,
+    SandboxDAO,
+    WriteSession,
+)
 from browserpool.database.models.sandbox import Sandbox
 from browserpool.service.commands.create_browser import (
     CreateBrowserCommand,
@@ -149,3 +155,43 @@ async def make_alpine_container(
     )
     await start_container(StartContainerParameters(container_id=response.container_id))
     return response.container_id
+
+
+async def seed_browser(
+    request_container: AsyncContainer,
+    settings: ServiceSettings,
+    *,
+    container_id: str,
+    active: bool = True,
+    last_touched_at: datetime | None = None,
+    network_id: str | None = None,
+) -> str:
+    """Provision sandboxes if needed and insert a browser row without Docker.
+
+    Returns the sandbox network id the browser was attached to.
+    """
+    sandbox_dao = await request_container.get(SandboxDAO[WriteSession])
+    browser_dao = await request_container.get(BrowserDAO[WriteSession])
+    if network_id is not None:
+        sandbox = await sandbox_dao.find_by_id(network_id)
+        if sandbox is None:
+            raise ValueError(f"Unknown sandbox network id: {network_id}")
+    else:
+        sandboxes = await sandbox_dao.find_active_without_browsers()
+        if not sandboxes:
+            await provision_sandboxes(request_container, settings, sandbox_dao)
+            sandboxes = await sandbox_dao.find_active_without_browsers()
+        sandbox = sandboxes[0]
+    await browser_dao.create(
+        BrowserCreateParameters(
+            container_id=container_id,
+            network_id=sandbox.network_id,
+            variant="camoufox",
+            host="10.0.0.2",
+            port=9222,
+            idle_ttl_seconds=60,
+            last_touched_at=last_touched_at or datetime.now(UTC),
+            active=active,
+        )
+    )
+    return sandbox.network_id
