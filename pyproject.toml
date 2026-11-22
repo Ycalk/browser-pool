@@ -12,6 +12,7 @@ packages = [
     {include = "browserpool/variant",from = "components"},
     {include = "browserpool/service",from = "components"},
     {include = "browserpool/database",from = "components"},
+    {include = "browserpool/entrypoint",from = "bases"},
 ]
 [tool.poetry.dependencies]
 python = ">=3.13,<3.15"
@@ -32,6 +33,7 @@ pytest-asyncio = "^1.4.0"
 httpx = "^0.28.1"
 camoufox = {extras = ["geoip"], version = "^0.5.8"}
 alembic = "^1.20.0"
+uvicorn = "^0.54.0"
 
 [tool.basedpyright]
 typeCheckingMode = "recommended"
@@ -68,3 +70,4 @@ build-backend = "poetry.core.masonry.api"
 start_container = "development.start_container:run"
 start_browser = "development.start_browser:run"
 alembic = "browserpool.migrator:run"
+entrypoint = "browserpool.entrypoint:run"
