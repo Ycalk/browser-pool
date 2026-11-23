@@ -13,6 +13,8 @@ from .commands import (
     ReconcileSandboxesResponse,
     RemoveBrowserCommand,
     RemoveBrowserParameters,
+    ResolveBrowserCommand,
+    ResolveBrowserParameters,
     TouchBrowserCommand,
     TouchBrowserParameters,
 )
@@ -49,6 +51,8 @@ __all__ = [
     "ReconcileSandboxesResponse",
     "RemoveBrowserCommand",
     "RemoveBrowserParameters",
+    "ResolveBrowserCommand",
+    "ResolveBrowserParameters",
     "TouchBrowserCommand",
     "TouchBrowserParameters",
 ]

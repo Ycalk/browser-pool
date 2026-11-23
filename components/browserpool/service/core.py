@@ -10,6 +10,7 @@ from .commands import (
     ReconcileBrowsersCommand,
     ReconcileSandboxesCommand,
     RemoveBrowserCommand,
+    ResolveBrowserCommand,
     TouchBrowserCommand,
 )
 from .settings import ServiceSettings
@@ -25,6 +26,7 @@ class ServiceProvider(Provider):
         ReconcileBrowsersCommand,
         ReconcileSandboxesCommand,
         RemoveBrowserCommand,
+        ResolveBrowserCommand,
         TouchBrowserCommand,
         scope=Scope.REQUEST,
     )

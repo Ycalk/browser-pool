@@ -56,6 +56,22 @@ class BrowserDAO[TSession: DAOSession](
     def _load_mapper(cls) -> dict[BrowserLoadEnum, ORMOption | Sequence[ORMOption]]:
         return {BrowserLoadEnum.SANDBOX: joinedload(Browser.sandbox)}
 
+    async def find_by_id_prefix(
+        self, prefix: str, *, includes: Sequence[BrowserLoadEnum] | None = None
+    ) -> Sequence[Browser]:
+        """Find browsers whose container id starts with the given prefix.
+
+        SQLite cannot use the primary key index for a case-insensitive LIKE, but
+        the table holds at most ``browser_limit`` rows, so a scan is irrelevant.
+        """
+        stmt = select(self.model).where(
+            self.model.container_id.startswith(prefix, autoescape=True)
+        )
+        if includes is not None:
+            stmt = stmt.options(*self.get_options(includes))
+        result = await self._session.scalars(stmt)
+        return result.all()
+
     async def find_all(
         self, *, includes: Sequence[BrowserLoadEnum] | None = None
     ) -> Sequence[Browser]:

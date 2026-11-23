@@ -46,6 +46,11 @@ class BrowserVariant(ABC):
     def development_protocol_port(self) -> int: ...
 
     @classmethod
+    def vnc_port(cls) -> int:
+        """KasmVNC httpd/websocket port served by the browser image."""
+        return 6080
+
+    @classmethod
     @abstractmethod
     def image_name(cls) -> str: ...
 
@@ -96,6 +101,15 @@ class BrowserVariant(ABC):
             )
             for name, var in cls._variants.items()
         ]
+
+    @classmethod
+    def vnc_port_for(cls, name: str) -> int:
+        variant = cls._variants.get(name)
+        if variant is None:
+            raise BrowserConfigurationError(
+                f"No image configured for browser variant {name}"
+            )
+        return variant.vnc_port()
 
     async def wait_until_ready(
         self,

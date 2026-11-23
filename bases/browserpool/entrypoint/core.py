@@ -22,6 +22,7 @@ from .exceptions import (
 )
 from .routers import (
     browsers_router,
+    internal_router,
     node_router,
     proxy_router,
 )
@@ -99,6 +100,7 @@ async def build_app() -> FastAPI:
     app.include_router(browsers_router, prefix=entrypoint_settings.methods_prefix)
     app.include_router(node_router, prefix=entrypoint_settings.methods_prefix)
     app.include_router(proxy_router, prefix=entrypoint_settings.methods_prefix)
+    app.include_router(internal_router, prefix=entrypoint_settings.methods_prefix)
 
     app.get("/ping", include_in_schema=False)(lambda: "pong")
 
