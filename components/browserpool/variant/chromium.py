@@ -4,6 +4,7 @@ import httpx
 from browserpool.container_driver import (
     ContainerConfig,
     EndpointConfig,
+    HostConfig,
     NetworkingConfig,
 )
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -39,6 +40,7 @@ class ChromiumBrowser(BrowserVariant, name="chromium"):
             networking_config=NetworkingConfig(
                 endpoints_config={self._network_name: EndpointConfig()}
             ),
+            host_config=HostConfig(restart_policy="unless-stopped"),
         )
 
     @property

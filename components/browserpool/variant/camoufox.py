@@ -5,6 +5,7 @@ from typing import ClassVar, Final, override
 from browserpool.container_driver import (
     ContainerConfig,
     EndpointConfig,
+    HostConfig,
     NetworkingConfig,
 )
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -40,6 +41,10 @@ class CamoufoxBrowser(BrowserVariant, name="camoufox"):
             networking_config=NetworkingConfig(
                 endpoints_config={self._network_name: EndpointConfig()}
             ),
+            # The display keeper restarts the container when Firefox loses its
+            # only window: after an external close every new page fails with
+            # "window is null", so an in-process restart cannot recover.
+            host_config=HostConfig(restart_policy="unless-stopped"),
         )
 
     @property
