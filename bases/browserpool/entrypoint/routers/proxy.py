@@ -120,9 +120,7 @@ async def proxy_ws(
     try:
         async with session_container(scope=Scope.REQUEST) as request_container:
             get_browser = await request_container.get(GetBrowserCommand)
-            browser = await get_browser(
-                GetBrowserParameters(container_id=container_id)
-            )
+            browser = await get_browser(GetBrowserParameters(container_id=container_id))
     except Exception as exc:
         _logger.warning(
             "proxy_ws_browser_failed",

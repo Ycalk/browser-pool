@@ -17,6 +17,7 @@ class EntrypointSettings(BaseSettings):
     api_port: int = 8080
     api_secret_key: str
     proxy_timeout_seconds: float = 30.0
+    worker_interval_seconds: float = 30.0
 
     @property
     def methods_prefix(self) -> str:

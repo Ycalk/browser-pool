@@ -1,4 +1,4 @@
-from browserpool.entrypoint.security import secret_key_check
+from browserpool.entrypoint.security import localhost_only, secret_key_check
 from browserpool.service import (
     Browser,
     NodeInfoCommand,
@@ -27,25 +27,29 @@ async def node_info(
     return await command()
 
 
-@router.post("/reap", status_code=status.HTTP_200_OK)
+@router.post("/reap", status_code=status.HTTP_200_OK, include_in_schema=False)
 async def reap_idle_browsers(
     command: FromDishka[ReapIdleBrowsersCommand],
-    _: None = Security(secret_key_check),
+    _localhost: None = Security(localhost_only),
 ) -> list[Browser]:
     return await command()
 
 
-@router.post("/reconcile/browsers", status_code=status.HTTP_200_OK)
+@router.post(
+    "/reconcile/browsers", status_code=status.HTTP_200_OK, include_in_schema=False
+)
 async def reconcile_browsers(
     command: FromDishka[ReconcileBrowsersCommand],
-    _: None = Security(secret_key_check),
+    _localhost: None = Security(localhost_only),
 ) -> ReconcileBrowsersResponse:
     return await command()
 
 
-@router.post("/reconcile/sandboxes", status_code=status.HTTP_200_OK)
+@router.post(
+    "/reconcile/sandboxes", status_code=status.HTTP_200_OK, include_in_schema=False
+)
 async def reconcile_sandboxes(
     command: FromDishka[ReconcileSandboxesCommand],
-    _: None = Security(secret_key_check),
+    _localhost: None = Security(localhost_only),
 ) -> ReconcileSandboxesResponse:
     return await command()

@@ -62,7 +62,9 @@ class NodeInfoCommand(ParameterlessCommand[NodeInfoResponse]):
 
 
 def _package_version() -> str:
-    try:
-        return metadata.version("browser-pool")
-    except metadata.PackageNotFoundError:  # pragma: no cover - installed in production
-        return "unknown"
+    for package in ("service", "browser-pool"):
+        try:
+            return metadata.version(package)
+        except metadata.PackageNotFoundError:
+            continue
+    return "unknown"  # pragma: no cover - installed in production

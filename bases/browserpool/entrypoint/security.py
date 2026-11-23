@@ -1,7 +1,7 @@
 from hmac import compare_digest
 
 from dishka.integrations.fastapi import FromDishka, inject
-from fastapi import Depends, status
+from fastapi import Depends, Request, status
 from fastapi.security import APIKeyHeader
 from fastapi.security.utils import get_authorization_scheme_param
 
@@ -54,4 +54,15 @@ def secret_key_check(
             status_code=status.HTTP_401_UNAUTHORIZED,
             message="Invalid authentication credentials",
             headers={"WWW-Authenticate": "SECRET"},
+        )
+
+
+def localhost_only(request: Request) -> None:
+    client = request.client
+    host = client.host if client is not None else None
+    if host not in {"127.0.0.1", "::1"}:
+        raise CustomHTTPException(
+            error="Forbidden",
+            status_code=status.HTTP_403_FORBIDDEN,
+            message="Available only from localhost",
         )

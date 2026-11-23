@@ -1,0 +1,31 @@
+services:
+  service:
+    build:
+      context: projects/service
+      dockerfile: Dockerfile
+    image: browserpool/service:local
+    ports:
+      - "${SERVICE_PORT}:8080"
+    volumes:
+      - service_data:/app/data
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - API_SECRET_KEY=${API_SECRET_KEY}
+      - BROWSER_LIMIT=${BROWSER_LIMIT}
+      - SQLITE_DATABASE_PATH=/app/data/browserpool.db
+      - DOCKER_HOST=/var/run/docker.sock
+      - CAMOUFOX_IMAGE_NAME=ghcr.io/ycalk/browser-pool/camoufox-browser
+      - CAMOUFOX_IMAGE_TAG=0.1.0
+      - CHROMIUM_IMAGE_NAME=ghcr.io/ycalk/browser-pool/chromium-browser
+      - CHROMIUM_IMAGE_TAG=0.1.0
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:8080/ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    group_add:
+      - 988
+    restart: always
+
+volumes:
+  service_data:
