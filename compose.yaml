@@ -15,7 +15,7 @@ services:
       - SQLITE_DATABASE_PATH=/app/data/browserpool.db
       - DOCKER_HOST=/var/run/docker.sock
       - CAMOUFOX_IMAGE_NAME=ghcr.io/ycalk/browser-pool/camoufox-browser
-      - CAMOUFOX_IMAGE_TAG=0.1.0
+      - CAMOUFOX_IMAGE_TAG=0.1.1
       - CHROMIUM_IMAGE_NAME=ghcr.io/ycalk/browser-pool/chromium-browser
       - CHROMIUM_IMAGE_TAG=0.1.0
     healthcheck:
