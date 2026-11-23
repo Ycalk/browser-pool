@@ -36,7 +36,7 @@ ENV PATH="/home/project/.local/bin:$PATH"
 COPY --chown=project:project entrypoint.sh .
 RUN chmod +x /home/project/app/entrypoint.sh
 
-ARG wheel=camoufox_browser-0.1.0-py3-none-any.whl
+ARG wheel=camoufox_browser-0.1.1-py3-none-any.whl
 COPY --chown=project:project ./dist/$wheel .
 RUN pip install --no-cache-dir --upgrade --no-warn-script-location /home/project/app/$wheel
 

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "camoufox_browser"
-version = "0.1.0"
+version = "0.1.1"
 
 authors = ["ycalk (Лосев Алексей) <alosev752@gmail.com>"]
 license = ""
